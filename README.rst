@@ -3,7 +3,7 @@ confmodel
 
 Declarative configuration access and validation system.
 
-|confmodel-ci|_ |confmodel-cover|_ |confmodel-waffle|_
+|confmodel-ci|_ |confmodel-cover|_
 
 .. |confmodel-ci| image:: https://travis-ci.org/praekelt/confmodel.png?branch=develop
 .. _confmodel-ci: https://travis-ci.org/praekelt/confmodel
