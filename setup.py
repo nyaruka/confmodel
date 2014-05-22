@@ -1,9 +1,17 @@
 from setuptools import setup, find_packages
 
+import versioneer
+versioneer.VCS = 'git'
+versioneer.versionfile_source = 'confmodel/_version.py'
+versioneer.versionfile_build = 'confmodel/_version.py'
+versioneer.tag_prefix = 'confmodel-'
+versioneer.parentdir_prefix = 'confmodel-'
+
 
 setup(
     name="confmodel",
-    version="0.1.0",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     url='http://github.com/praekelt/confmodel',
     license='BSD',
     description="Declarative configuration access and validation system.",

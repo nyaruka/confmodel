@@ -1,0 +1,2 @@
+include versioneer.py
+include confmodel/_version.py
