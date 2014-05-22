@@ -1,24 +1,9 @@
 from unittest import TestCase
 
-from zope.interface import Interface, implements
-
 from confmodel.config import (
     Config, ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
     ConfigList, ConfigDict, ConfigUrl, ConfigRegex)
 from confmodel.errors import ConfigError
-
-
-class ITestConfigInterface(Interface):
-
-    def implements_this(foo):
-        """This should be implemented"""
-
-
-class TestConfigClassName(object):
-    implements(ITestConfigInterface)
-
-    def implements_this(self, foo):
-        pass
 
 
 class ConfigTest(TestCase):
