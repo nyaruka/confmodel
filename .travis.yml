@@ -4,6 +4,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
+  - pip install coveralls
 script:
   - py.test --cov confmodel confmodel
   - coverage report -m
