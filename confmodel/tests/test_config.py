@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from confmodel.config import (
     Config, ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
-    ConfigList, ConfigDict, ConfigUrl, ConfigRegex)
+    ConfigList, ConfigDict, ConfigUrl, ConfigRegex, FieldFallback)
 from confmodel.errors import ConfigError
 
 
@@ -340,3 +340,42 @@ class TestConfigField(TestCase):
         self.assertEqual(None, self.field_value(field))
         self.assert_field_invalid(field, object())
         self.assert_field_invalid(field, 1)
+
+
+class TestFieldFallback(TestCase):
+    def test_get_fields(self):
+        class ConfigWithFallback(Config):
+            field1 = ConfigText("field1", required=True)
+            field2 = ConfigInt("field2")
+            field3 = ConfigBool("field3")
+
+        fallback = FieldFallback(['field1', 'field3'])
+        config = ConfigWithFallback({'field1': 'foo'})
+        self.assertEqual(fallback.get_fields(config), {
+            # We need to get the descriptors off the class.
+            'field1': ConfigWithFallback.field1,
+            'field3': ConfigWithFallback.field3,
+        })
+
+    def test_get_fields_undefined_field(self):
+        class ConfigWithFallback(Config):
+            field1 = ConfigText("field1", required=True)
+            field2 = ConfigInt("field2")
+
+        fallback = FieldFallback(['field1', 'field3'])
+        config = ConfigWithFallback({'field1': 'foo'})
+        self.assertRaises(ConfigError, fallback.get_fields, config)
+        # Python 2.6 doesn't provide a mechanism to get the exception object,
+        # so we do this by hand.
+        try:
+            fallback.get_fields(config)
+        except ConfigError, err:
+            self.assertEqual(err.args[0], "Undefined fallback field: 'field3'")
+
+    def test_validation_simple(self):
+        class ConfigWithFallback(Config):
+            field = ConfigText("field", required=True)
+
+        fallback = FieldFallback(['field'])
+        config = ConfigWithFallback({'field': 'foo'})
+        fallback.validate(config)

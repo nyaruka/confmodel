@@ -67,6 +67,26 @@ class ConfigField(object):
         raise AttributeError("Config fields are read-only.")
 
 
+class FieldFallback(object):
+    def __init__(self, field_names):
+        self.field_names = field_names
+
+    def get_fields(self, obj):
+        fields = {}
+        for field in obj.fields:
+            if field.name in self.field_names:
+                fields[field.name] = field
+        for field_name in self.field_names:
+            if field_name not in fields:
+                raise ConfigError(
+                    "Undefined fallback field: '%s'" % (field_name,))
+        return fields
+
+    def validate(self, obj):
+        for field in self.get_fields(obj).values():
+            field.validate(obj)
+
+
 class ConfigText(ConfigField):
     field_type = 'str'
 
