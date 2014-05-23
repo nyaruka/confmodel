@@ -42,7 +42,7 @@ class ConfigField(object):
         if self.required:
             if not self.present(obj):
                 raise ConfigError(
-                    "Missing required config field '%s'" % (self.name))
+                    "Missing required config field '%s'" % (self.name,))
         # This will raise an exception if the value exists, but is invalid.
         self.get_value(obj)
 
@@ -134,8 +134,6 @@ class ConfigUrl(ConfigField):
     field_type = 'URL'
 
     def clean(self, value):
-        if value is None:
-            return None
         if not isinstance(value, basestring):
             self.raise_config_error("is not a URL string.")
         # URLs must be bytes, not unicode.

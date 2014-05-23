@@ -6,7 +6,7 @@ from confmodel.config import (
 from confmodel.errors import ConfigError
 
 
-class ConfigTest(TestCase):
+class TestConfig(TestCase):
     def test_simple_config(self):
         class FooConfig(Config):
             "Test config."
@@ -188,13 +188,20 @@ class ConfigTest(TestCase):
 
         self.assertRaises(ConfigError, FooConfig, {'foo': -1})
 
+    def test_fields_read_only(self):
+        class FooConfig(Config):
+            foo = ConfigInt("foo")
+
+        conf = FooConfig({'foo': 1})
+        self.assertRaises(AttributeError, setattr, conf, 'foo', 2)
+
 
 class FakeModel(object):
     def __init__(self, config):
         self._config_data = config
 
 
-class ConfigFieldTest(TestCase):
+class TestConfigField(TestCase):
     def fake_model(self, *value, **kw):
         config = kw.pop('config', {})
         if value:
@@ -333,8 +340,3 @@ class ConfigFieldTest(TestCase):
         self.assertEqual(None, self.field_value(field))
         self.assert_field_invalid(field, object())
         self.assert_field_invalid(field, 1)
-
-    def check_endpoint(self, endpoint, endpoint_type, **kw):
-        self.assertEqual(type(endpoint), endpoint_type)
-        for name, value in kw.items():
-            self.assertEqual(getattr(endpoint, '_%s' % name), value)
