@@ -13,7 +13,8 @@ class ConfigField(object):
 
     field_type = None
 
-    def __init__(self, doc, required=False, default=None, static=False):
+    def __init__(self, doc, required=False, default=None, static=False,
+                 required_fallback=False, fallbacks=()):
         # This hack is to allow us to track the order in which fields were
         # added to a config class. We want to do this so we can document fields
         # in the same order they're defined.
@@ -24,6 +25,8 @@ class ConfigField(object):
         self.required = required
         self.default = default
         self.static = static
+        self.required_fallback = required_fallback
+        self.fallbacks = fallbacks
 
     def get_doc(self):
         if self.field_type is None:
@@ -35,14 +38,43 @@ class ConfigField(object):
     def setup(self, name):
         self.name = name
 
-    def present(self, obj):
-        return self.name in obj._config_data
+    def present(self, obj, check_fallbacks=True):
+        """
+        Check if the data for this field is present in the config data.
+
+        :param obj: IConfigData provider containing config data.
+        :param bool check_fallbacks:
+            If ``False``, fallbacks will not be checked. (This is used
+            internally to determine whether to use fallbacks when looking up
+            data.)
+
+        :returns:
+            ``True`` if the value is present in the provided data, ``False``
+            otherwise.
+        """
+        if self.name in obj._config_data:
+            return True
+        if check_fallbacks:
+            for fallback in self.fallbacks:
+                if fallback.present(obj):
+                    return True
+        return False
+
+    def present_as_fallback(self, obj):
+        """
+        Check if the data for this field is present for use in a fallback.
+
+        :param obj: IConfigData provider containing config data.
+        :returns:
+            ``True`` if the value is present in the provided data or if
+            :attr:`required_fallback` is ``False``, ``False`` otherwise.
+        """
+        return (self.required_fallback and self.present(obj))
 
     def validate(self, obj):
-        if self.required:
-            if not self.present(obj):
-                raise ConfigError(
-                    "Missing required config field '%s'" % (self.name,))
+        if self.required and not self.present(obj):
+            raise ConfigError(
+                "Missing required config field '%s'" % (self.name,))
         # This will raise an exception if the value exists, but is invalid.
         self.get_value(obj)
 
@@ -52,8 +84,16 @@ class ConfigField(object):
     def clean(self, value):
         return value
 
+    def find_value(self, obj):
+        if self.present(obj, check_fallbacks=False):
+            return obj._config_data.get(self.name, self.default)
+        for fallback in self.fallbacks:
+            if fallback.present(obj):
+                return fallback.build_value(obj)
+        return self.default
+
     def get_value(self, obj):
-        value = obj._config_data.get(self.name, self.default)
+        value = self.find_value(obj)
         return self.clean(value) if value is not None else None
 
     def __get__(self, obj, cls):
@@ -92,6 +132,10 @@ class FieldFallback(object):
                 raise ConfigError(
                     "Undefined fallback field: '%s'" % (field_name,))
         return fields
+
+    def present(self, obj):
+        return all(field.present_as_fallback(obj)
+                   for field in self.get_fields(obj).values())
 
     def validate(self, obj):
         for field in self.get_fields(obj).values():

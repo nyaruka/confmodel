@@ -409,3 +409,47 @@ class TestFieldFallback(TestCase):
         fallback = FieldFallback(['host', 'port'], fallback_host_port)
         config = ConfigWithFallback({'host': 'example.com', 'port': 8080})
         self.assertEqual(fallback.build_value(config), "example.com:8080")
+
+    def test_field_uses_required_fallback(self):
+        class ConfigWithFallback(Config):
+            oldfield = ConfigText(
+                "oldfield", required=False, required_fallback=True)
+            newfield = ConfigText(
+                "newfield", required=True,
+                fallbacks=[FieldFallback(["oldfield"])])
+
+        config = ConfigWithFallback({"oldfield": "foo"})
+        self.assertEqual(config.newfield, "foo")
+
+    def test_field_ignores_unnecessary_fallback(self):
+        class ConfigWithFallback(Config):
+            oldfield = ConfigText(
+                "oldfield", required=False, required_fallback=True)
+            newfield = ConfigText(
+                "newfield", required=True,
+                fallbacks=[FieldFallback(["oldfield"])])
+
+        config = ConfigWithFallback({"oldfield": "foo", "newfield": "bar"})
+        self.assertEqual(config.newfield, "bar")
+
+    def test_field_present_if_fallback_present(self):
+        class ConfigWithFallback(Config):
+            oldfield = ConfigText(
+                "oldfield", required=False, required_fallback=True)
+            newfield = ConfigText(
+                "newfield", required=True,
+                fallbacks=[FieldFallback(["oldfield"])])
+
+        config = ConfigWithFallback({"oldfield": "foo"})
+        self.assertEqual(ConfigWithFallback.newfield.present(config), True)
+
+    def test_field_not_present_if_fallback_missing(self):
+        class ConfigWithFallback(Config):
+            oldfield = ConfigText(
+                "oldfield", required=False, required_fallback=True)
+            newfield = ConfigText(
+                "newfield", required=False,
+                fallbacks=[FieldFallback(["oldfield"])])
+
+        config = ConfigWithFallback({})
+        self.assertEqual(ConfigWithFallback.newfield.present(config), False)
