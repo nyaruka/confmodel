@@ -2,7 +2,8 @@ from unittest import TestCase
 
 from confmodel.config import (
     Config, ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
-    ConfigList, ConfigDict, ConfigUrl, ConfigRegex, FieldFallback)
+    ConfigList, ConfigDict, ConfigUrl, ConfigRegex, FieldFallback,
+    fallback_build_value_passthrough)
 from confmodel.errors import ConfigError
 
 
@@ -379,3 +380,32 @@ class TestFieldFallback(TestCase):
         fallback = FieldFallback(['field'])
         config = ConfigWithFallback({'field': 'foo'})
         fallback.validate(config)
+
+    def test_fallback_build_value_passthrough(self):
+        self.assertEqual(
+            fallback_build_value_passthrough({'foo': 'bar'}), "bar")
+        self.assertEqual(
+            fallback_build_value_passthrough({'bar': 'baz'}), "baz")
+        self.assertRaises(ConfigError, fallback_build_value_passthrough, {})
+        self.assertRaises(
+            ConfigError, fallback_build_value_passthrough, {'a': 1, 'b': 2})
+
+    def test_build_value_default_callback(self):
+        class ConfigWithFallback(Config):
+            field = ConfigText("field", required=True)
+
+        fallback = FieldFallback(['field'])
+        config = ConfigWithFallback({'field': 'foo'})
+        self.assertEqual(fallback.build_value(config), "foo")
+
+    def test_build_value_custom_callback(self):
+        class ConfigWithFallback(Config):
+            host = ConfigText("host", required=True)
+            port = ConfigInt("port", required=True)
+
+        def fallback_host_port(fields):
+            return "%(host)s:%(port)s" % fields
+
+        fallback = FieldFallback(['host', 'port'], fallback_host_port)
+        config = ConfigWithFallback({'host': 'example.com', 'port': 8080})
+        self.assertEqual(fallback.build_value(config), "example.com:8080")

@@ -67,9 +67,20 @@ class ConfigField(object):
         raise AttributeError("Config fields are read-only.")
 
 
+def fallback_build_value_passthrough(fields):
+    if len(fields) != 1:
+        raise ConfigError(
+            "Expected exactly one fallback field, got %r" % (fields,))
+    [field] = fields.values()
+    return field
+
+
 class FieldFallback(object):
-    def __init__(self, field_names):
+    def __init__(self, field_names, build_value_callback=None):
         self.field_names = field_names
+        if build_value_callback is None:
+            build_value_callback = fallback_build_value_passthrough
+        self.build_value_callback = build_value_callback
 
     def get_fields(self, obj):
         fields = {}
@@ -85,6 +96,12 @@ class FieldFallback(object):
     def validate(self, obj):
         for field in self.get_fields(obj).values():
             field.validate(obj)
+
+    def build_value(self, obj):
+        fields = self.get_fields(obj)
+        field_values = dict(
+            (name, field.get_value(obj)) for name, field in fields.iteritems())
+        return self.build_value_callback(field_values)
 
 
 class ConfigText(ConfigField):
