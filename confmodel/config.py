@@ -130,13 +130,13 @@ class FieldFallback(object):
 
     def get_fields(self, obj):
         fields = {}
-        for field in obj.fields:
-            if field.name in self.field_names:
-                fields[field.name] = field
         for field_name in self.field_names:
-            if field_name not in fields:
+            field = obj._fields.get(field_name, None)
+            if field is None:
                 raise ConfigError(
                     "Undefined fallback field: '%s'" % (field_name,))
+            else:
+                fields[field.name] = field
         return fields
 
     def present(self, obj):
@@ -257,13 +257,13 @@ def generate_doc(cls, fields, header_indent='', indent=' ' * 4):
 
 
 class ConfigMetaClass(type):
-    def __new__(mcs, name, bases, dict):
+    def __new__(mcs, name, bases, class_dict):
         # locate Field instances
         fields = []
         unified_class_dict = {}
         for base in bases:
             unified_class_dict.update(inspect.getmembers(base))
-        unified_class_dict.update(dict)
+        unified_class_dict.update(class_dict)
 
         for key, possible_field in unified_class_dict.items():
             if isinstance(possible_field, ConfigField):
@@ -271,8 +271,9 @@ class ConfigMetaClass(type):
                 possible_field.setup(key)
 
         fields.sort(key=lambda f: f.creation_order)
-        dict['fields'] = fields
-        cls = type.__new__(mcs, name, bases, dict)
+        class_dict['_fields'] = dict((f.name, f) for f in fields)
+        class_dict['_field_names'] = tuple(f.name for f in fields)
+        cls = type.__new__(mcs, name, bases, class_dict)
         cls.__doc__ = generate_doc(cls, fields)
         return cls
 
@@ -287,12 +288,16 @@ class Config(object):
     def __init__(self, config_data, static=False):
         self._config_data = IConfigData(config_data)
         self.static = static
-        for field in self.fields:
+        for field in self._get_fields():
             if self.static and not field.static:
                 # Skip non-static fields on static configs.
                 continue
             field.validate(self)
         self.post_validate()
+
+    @classmethod
+    def _get_fields(cls):
+        return [cls._fields[field_name] for field_name in cls._field_names]
 
     def raise_config_error(self, message):
         """

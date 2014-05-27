@@ -109,7 +109,7 @@ class TestConfig(TestCase):
             bar = ConfigField("New field.")
 
         conf = BarConfig({'foo': 'blah', 'bar': 'bleh'})
-        self.assertEqual(conf.fields,
+        self.assertEqual(conf._get_fields(),
                          [FooConfig.foo, BarConfig.bar])
         self.assertEqual(conf.foo, 'blah')
         self.assertEqual(conf.bar, 'bleh')
@@ -143,7 +143,7 @@ class TestConfig(TestCase):
             baz = ConfigField("From top class.")
 
         conf = BazConfig({'foo': 'blah', 'bar': 'bleh', 'baz': 'blerg'})
-        self.assertEqual(conf.fields,
+        self.assertEqual(conf._get_fields(),
                          [FooConfig.foo, BarConfig.bar, BazConfig.baz])
         self.assertEqual(conf.foo, 'blah')
         self.assertEqual(conf.bar, 'bleh')
