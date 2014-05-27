@@ -115,6 +115,12 @@ def fallback_build_value_passthrough(fields):
     return field
 
 
+def make_fallback_build_value_format_string(formatstr):
+    def fallback_build_value_format_string(fields):
+        return formatstr.format(**fields)
+    return fallback_build_value_format_string
+
+
 class FieldFallback(object):
     def __init__(self, field_names, build_value_callback=None):
         self.field_names = field_names

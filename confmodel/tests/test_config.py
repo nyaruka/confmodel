@@ -3,7 +3,7 @@ from unittest import TestCase
 from confmodel.config import (
     Config, ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
     ConfigList, ConfigDict, ConfigUrl, ConfigRegex, FieldFallback,
-    fallback_build_value_passthrough)
+    fallback_build_value_passthrough, make_fallback_build_value_format_string)
 from confmodel.errors import ConfigError
 
 
@@ -389,6 +389,13 @@ class TestFieldFallback(TestCase):
         self.assertRaises(ConfigError, fallback_build_value_passthrough, {})
         self.assertRaises(
             ConfigError, fallback_build_value_passthrough, {'a': 1, 'b': 2})
+
+    def test_fallback_build_value_format_string(self):
+        formatter_build_value = make_fallback_build_value_format_string(
+            "{host}:{port}")
+        self.assertEqual(
+            formatter_build_value({'host': 'example.com', 'port': 80}),
+            "example.com:80")
 
     def test_build_value_default_callback(self):
         class ConfigWithFallback(Config):
