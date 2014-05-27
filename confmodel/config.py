@@ -14,7 +14,7 @@ class ConfigField(object):
     field_type = None
 
     def __init__(self, doc, required=False, default=None, static=False,
-                 required_fallback=False, fallbacks=()):
+                 required_fallback=True, fallbacks=()):
         # This hack is to allow us to track the order in which fields were
         # added to a config class. We want to do this so we can document fields
         # in the same order they're defined.
