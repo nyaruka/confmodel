@@ -3,7 +3,7 @@ from unittest import TestCase
 from confmodel.config import (
     Config, ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
     ConfigList, ConfigDict, ConfigUrl, ConfigRegex, FieldFallback,
-    fallback_build_value_passthrough, make_fallback_build_value_format_string)
+    format_string_fallback_builder)
 from confmodel.errors import ConfigError
 
 
@@ -381,23 +381,27 @@ class TestFieldFallback(TestCase):
         config = ConfigWithFallback({'field': 'foo'})
         fallback.validate(config)
 
-    def test_fallback_build_value_passthrough(self):
+    def test_format_string_fallback_builder(self):
         self.assertEqual(
-            fallback_build_value_passthrough({'foo': 'bar'}), "bar")
+            format_string_fallback_builder({"foo": "bar"}, "{foo}"), "bar")
         self.assertEqual(
-            fallback_build_value_passthrough({'bar': 'baz'}), "baz")
-        self.assertRaises(ConfigError, fallback_build_value_passthrough, {})
+            format_string_fallback_builder(
+                {"foo": "bar", "baz": "quux"}, "{foo}-{baz}"),
+            "bar-quux")
         self.assertRaises(
-            ConfigError, fallback_build_value_passthrough, {'a': 1, 'b': 2})
+            KeyError, format_string_fallback_builder, {"foo": "bar"}, "{bar}")
 
-    def test_fallback_build_value_format_string(self):
-        formatter_build_value = make_fallback_build_value_format_string(
-            "{host}:{port}")
+    def test_format_string_fallback_builder_no_format_string(self):
         self.assertEqual(
-            formatter_build_value({'host': 'example.com', 'port': 80}),
-            "example.com:80")
+            format_string_fallback_builder({"foo": "bar"}), "bar")
+        self.assertEqual(
+            format_string_fallback_builder({"bar": "baz"}), "baz")
+        self.assertRaises(ConfigError, format_string_fallback_builder, {})
+        self.assertRaises(
+            ConfigError, format_string_fallback_builder,
+            {"foo": "bar", "baz": "quux"})
 
-    def test_build_value_default_callback(self):
+    def test_build_value_default_builder(self):
         class ConfigWithFallback(Config):
             field = ConfigText("field", required=True)
 
@@ -405,7 +409,17 @@ class TestFieldFallback(TestCase):
         config = ConfigWithFallback({'field': 'foo'})
         self.assertEqual(fallback.build_value(config), "foo")
 
-    def test_build_value_custom_callback(self):
+    def test_build_value_default_builder_format_string(self):
+        class ConfigWithFallback(Config):
+            foo = ConfigText("foo", required=True)
+            bar = ConfigText("bar")
+
+        fallback = FieldFallback(
+            ["foo", "bar"], builder_kwargs={"format_string": "{bar}-{foo}"})
+        config = ConfigWithFallback({"foo": "oof", "bar": "rab"})
+        self.assertEqual(fallback.build_value(config), "rab-oof")
+
+    def test_build_value_custom_builder(self):
         class ConfigWithFallback(Config):
             host = ConfigText("host", required=True)
             port = ConfigInt("port", required=True)

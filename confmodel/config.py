@@ -107,26 +107,25 @@ class ConfigField(object):
         raise AttributeError("Config fields are read-only.")
 
 
-def fallback_build_value_passthrough(fields):
-    if len(fields) != 1:
-        raise ConfigError(
-            "Expected exactly one fallback field, got %r" % (fields,))
-    [field] = fields.values()
-    return field
-
-
-def make_fallback_build_value_format_string(formatstr):
-    def fallback_build_value_format_string(fields):
-        return formatstr.format(**fields)
-    return fallback_build_value_format_string
+def format_string_fallback_builder(fields, format_string=None):
+    if format_string is None:
+        if len(fields) == 1:
+            format_string = "{%s}" % fields.keys()[0]
+        else:
+            raise ConfigError(
+                "format_string required for fields: %r" % (fields,))
+    return format_string.format(**fields)
 
 
 class FieldFallback(object):
-    def __init__(self, field_names, build_value_callback=None):
+    def __init__(self, field_names, builder_func=None, builder_kwargs=None):
         self.field_names = field_names
-        if build_value_callback is None:
-            build_value_callback = fallback_build_value_passthrough
-        self.build_value_callback = build_value_callback
+        if builder_func is None:
+            builder_func = format_string_fallback_builder
+        self.builder_func = builder_func
+        if builder_kwargs is None:
+            builder_kwargs = {}
+        self.builder_kwargs = builder_kwargs.copy()
 
     def get_fields(self, obj):
         fields = {}
@@ -151,7 +150,7 @@ class FieldFallback(object):
         fields = self.get_fields(obj)
         field_values = dict(
             (name, field.get_value(obj)) for name, field in fields.iteritems())
-        return self.build_value_callback(field_values)
+        return self.builder_func(field_values, **self.builder_kwargs)
 
 
 class ConfigText(ConfigField):
