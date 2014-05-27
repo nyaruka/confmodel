@@ -1,4 +1,6 @@
 language: python
+env:
+  - PIP_DOWNLOAD_CACHE=$HOME/.pip-cache
 install:
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
