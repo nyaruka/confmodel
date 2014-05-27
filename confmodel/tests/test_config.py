@@ -460,3 +460,14 @@ class TestFieldFallback(TestCase):
 
         config = ConfigWithFallback({})
         self.assertEqual(ConfigWithFallback.newfield.present(config), False)
+
+    def test_field_present_if_optional_fallback_missing(self):
+        class ConfigWithFallback(Config):
+            oldfield = ConfigText(
+                "oldfield", required=False, required_fallback=False)
+            newfield = ConfigText(
+                "newfield", required=False,
+                fallbacks=[FieldFallback(["oldfield"])])
+
+        config = ConfigWithFallback({})
+        self.assertEqual(ConfigWithFallback.newfield.present(config), True)

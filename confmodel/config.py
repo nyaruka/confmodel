@@ -69,7 +69,7 @@ class ConfigField(object):
             ``True`` if the value is present in the provided data or if
             :attr:`required_fallback` is ``False``, ``False`` otherwise.
         """
-        return (self.required_fallback and self.present(obj))
+        return (self.present(obj) or not self.required_fallback)
 
     def validate(self, obj):
         if self.required and not self.present(obj):
