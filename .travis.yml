@@ -1,12 +1,12 @@
 language: python
-python:
-  - "2.7"
 install:
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
   - pip install coveralls
 script:
-  - py.test --cov confmodel confmodel
-  - coverage report -m
+  # Run tests in various environments using tox.
+  - tox
+  # Run tests again with coverage.
+  - py.test --cov-report=term-missing --cov=confmodel confmodel
 after_success:
   - coveralls
