@@ -14,7 +14,7 @@ class ConfigField(object):
     field_type = None
 
     def __init__(self, doc, required=False, default=None, static=False,
-                 required_fallback=True, fallbacks=()):
+                 fallbacks=()):
         # This hack is to allow us to track the order in which fields were
         # added to a config class. We want to do this so we can document fields
         # in the same order they're defined.
@@ -25,7 +25,6 @@ class ConfigField(object):
         self.required = required
         self.default = default
         self.static = static
-        self.required_fallback = required_fallback
         self.fallbacks = fallbacks
 
     def get_doc(self):
@@ -40,7 +39,7 @@ class ConfigField(object):
 
     def present(self, obj, check_fallbacks=True):
         """
-        Check if the data for this field is present in the config data.
+        Check if a value for this field is present in the config data.
 
         :param obj: IConfigData provider containing config data.
         :param bool check_fallbacks:
@@ -59,17 +58,6 @@ class ConfigField(object):
                 if fallback.present(obj):
                     return True
         return False
-
-    def present_as_fallback(self, obj):
-        """
-        Check if the data for this field is present for use in a fallback.
-
-        :param obj: IConfigData provider containing config data.
-        :returns:
-            ``True`` if the value is present in the provided data or if
-            :attr:`required_fallback` is ``False``, ``False`` otherwise.
-        """
-        return (self.present(obj) or not self.required_fallback)
 
     def validate(self, obj):
         if self.required and not self.present(obj):
@@ -107,50 +95,66 @@ class ConfigField(object):
         raise AttributeError("Config fields are read-only.")
 
 
-def format_string_fallback_builder(fields, format_string=None):
-    if format_string is None:
-        if len(fields) == 1:
-            format_string = "{%s}" % fields.keys()[0]
-        else:
-            raise ConfigError(
-                "format_string required for fields: %r" % (fields,))
-    return format_string.format(**fields)
-
-
 class FieldFallback(object):
-    def __init__(self, field_names, builder_func=None, builder_kwargs=None):
-        self.field_names = field_names
-        if builder_func is None:
-            builder_func = format_string_fallback_builder
-        self.builder_func = builder_func
-        if builder_kwargs is None:
-            builder_kwargs = {}
-        self.builder_kwargs = builder_kwargs.copy()
+    required_fields = None
 
-    def get_fields(self, obj):
-        fields = {}
-        for field_name in self.field_names:
-            field = obj._fields.get(field_name, None)
-            if field is None:
-                raise ConfigError(
-                    "Undefined fallback field: '%s'" % (field_name,))
-            else:
-                fields[field.name] = field
-        return fields
+    def get_field_descriptor(self, config, field_name):
+        field = config._fields.get(field_name, None)
+        if field is None:
+            raise ConfigError(
+                "Undefined fallback field: '%s'" % (field_name,))
+        return field
 
-    def present(self, obj):
-        return all(field.present_as_fallback(obj)
-                   for field in self.get_fields(obj).values())
+    def field_present(self, config, field_name):
+        """
+        Check if a value for the named field is present in the config data.
 
-    def validate(self, obj):
-        for field in self.get_fields(obj).values():
-            field.validate(obj)
+        :param config: :class:`Config` instance containing config data.
+        :param str field_name: Name of the field to look up.
 
-    def build_value(self, obj):
-        fields = self.get_fields(obj)
-        field_values = dict(
-            (name, field.get_value(obj)) for name, field in fields.iteritems())
-        return self.builder_func(field_values, **self.builder_kwargs)
+        :returns:
+            ``True`` if the value is present in the provided data, ``False``
+            otherwise.
+        """
+        field = self.get_field_descriptor(config, field_name)
+        return field.present(config)
+
+    def present(self, config):
+        if self.required_fields is None:
+            raise NotImplementedError(
+                "Please set .required_fields or override .present()")
+
+        for field_name in self.required_fields:
+            if not self.field_present(config, field_name):
+                return False
+        return True
+
+    def build_value(self, config):
+        raise NotImplementedError("Please implement .build_value()")
+
+
+class SingleFieldFallback(FieldFallback):
+    def __init__(self, field_name):
+        self.field_name = field_name
+        self.required_fields = [field_name]
+
+    def build_value(self, config):
+        return getattr(config, self.field_name)
+
+
+class FormatStringFieldFallback(FieldFallback):
+    def __init__(self, format_string, required_fields, optional_fields=()):
+        self.format_string = format_string
+        self.required_fields = required_fields
+        self.optional_fields = optional_fields
+
+    def build_value(self, config):
+        field_values = {}
+        for field_name in self.required_fields:
+            field_values[field_name] = getattr(config, field_name)
+        for field_name in self.optional_fields:
+            field_values[field_name] = getattr(config, field_name)
+        return self.format_string.format(**field_values)
 
 
 class ConfigText(ConfigField):

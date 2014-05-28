@@ -1,9 +1,11 @@
 from unittest import TestCase
 
+from confmodel.config import Config
 from confmodel.config import (
-    Config, ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
-    ConfigList, ConfigDict, ConfigUrl, ConfigRegex, FieldFallback,
-    format_string_fallback_builder)
+    ConfigField, ConfigText, ConfigInt, ConfigFloat, ConfigBool,
+    ConfigList, ConfigDict, ConfigUrl, ConfigRegex)
+from confmodel.config import (
+    FieldFallback, SingleFieldFallback, FormatStringFieldFallback)
 from confmodel.errors import ConfigError
 
 
@@ -344,144 +346,138 @@ class TestConfigField(TestCase):
 
 
 class TestFieldFallback(TestCase):
-    def test_get_fields(self):
+    def test_get_field_descriptor(self):
         class ConfigWithFallback(Config):
-            field1 = ConfigText("field1", required=True)
-            field2 = ConfigInt("field2")
-            field3 = ConfigBool("field3")
+            field = ConfigText("field")
 
-        fallback = FieldFallback(['field1', 'field3'])
-        config = ConfigWithFallback({'field1': 'foo'})
-        self.assertEqual(fallback.get_fields(config), {
-            # We need to get the descriptors off the class.
-            'field1': ConfigWithFallback.field1,
-            'field3': ConfigWithFallback.field3,
+        cfg = ConfigWithFallback({"field": "foo"})
+        fallback = FieldFallback()
+        self.assertEqual(
+            fallback.get_field_descriptor(cfg, "field"),
+            ConfigWithFallback.field)
+        self.assertRaises(
+            ConfigError, fallback.get_field_descriptor, cfg, "no_field")
+
+    def test_field_present(self):
+        class ConfigWithFallback(Config):
+            field = ConfigText("field")
+            field_empty = ConfigText("field_empty")
+            field_default = ConfigText("field_default", default="bar")
+
+        cfg = ConfigWithFallback({"field": "foo"})
+        fallback = FieldFallback()
+        self.assertEqual(fallback.field_present(cfg, "field"), True)
+        self.assertEqual(fallback.field_present(cfg, "field_empty"), False)
+        self.assertEqual(fallback.field_present(cfg, "field_default"), False)
+
+    def test_present_not_implemented(self):
+        fallback = FieldFallback()
+        self.assertRaises(NotImplementedError, fallback.present, None)
+
+    def test_present(self):
+        class ConfigWithFallback(Config):
+            field = ConfigText("field")
+            field_empty = ConfigText("field_empty")
+            field_default = ConfigText("field_default", default="bar")
+            field_default_required = ConfigText("field_default", default="baz")
+
+        fallback = FieldFallback()
+        fallback.required_fields = ("field", "field_default_required")
+
+        self.assertEqual(fallback.present(ConfigWithFallback({})), False)
+
+        cfg = ConfigWithFallback({
+            "field": "foo",
+            "field_default_required": "bar",
         })
+        self.assertEqual(fallback.present(cfg), True)
 
-    def test_get_fields_undefined_field(self):
+    def test_build_value_not_implemented(self):
+        fallback = FieldFallback()
+        self.assertRaises(NotImplementedError, fallback.build_value, None)
+
+    # Tests for SingleFieldFallback
+
+    def test_single_field_fallback(self):
         class ConfigWithFallback(Config):
-            field1 = ConfigText("field1", required=True)
-            field2 = ConfigInt("field2")
+            field = ConfigText("field", default="foo")
 
-        fallback = FieldFallback(['field1', 'field3'])
-        config = ConfigWithFallback({'field1': 'foo'})
-        self.assertRaises(ConfigError, fallback.get_fields, config)
-        # Python 2.6 doesn't provide a mechanism to get the exception object,
-        # so we do this by hand.
-        try:
-            fallback.get_fields(config)
-        except ConfigError, err:
-            self.assertEqual(err.args[0], "Undefined fallback field: 'field3'")
-
-    def test_validation_simple(self):
-        class ConfigWithFallback(Config):
-            field = ConfigText("field", required=True)
-
-        fallback = FieldFallback(['field'])
-        config = ConfigWithFallback({'field': 'foo'})
-        fallback.validate(config)
-
-    def test_format_string_fallback_builder(self):
+        fallback = SingleFieldFallback("field")
+        self.assertEqual(fallback.build_value(ConfigWithFallback({})), "foo")
         self.assertEqual(
-            format_string_fallback_builder({"foo": "bar"}, "{foo}"), "bar")
-        self.assertEqual(
-            format_string_fallback_builder(
-                {"foo": "bar", "baz": "quux"}, "{foo}-{baz}"),
-            "bar-quux")
-        self.assertRaises(
-            KeyError, format_string_fallback_builder, {"foo": "bar"}, "{bar}")
+            fallback.build_value(ConfigWithFallback({"field": "bar"})), "bar")
 
-    def test_format_string_fallback_builder_no_format_string(self):
-        self.assertEqual(
-            format_string_fallback_builder({"foo": "bar"}), "bar")
-        self.assertEqual(
-            format_string_fallback_builder({"bar": "baz"}), "baz")
-        self.assertRaises(ConfigError, format_string_fallback_builder, {})
-        self.assertRaises(
-            ConfigError, format_string_fallback_builder,
-            {"foo": "bar", "baz": "quux"})
+    # Tests for FormatStringFieldFallback
 
-    def test_build_value_default_builder(self):
+    def test_format_string_field_fallback(self):
         class ConfigWithFallback(Config):
-            field = ConfigText("field", required=True)
+            text_field = ConfigText("text_field")
+            int_field = ConfigInt("int_field")
 
-        fallback = FieldFallback(['field'])
-        config = ConfigWithFallback({'field': 'foo'})
-        self.assertEqual(fallback.build_value(config), "foo")
+        fallback = FormatStringFieldFallback(
+            "{text_field}::{int_field:02d}", ["text_field", "int_field"])
 
-    def test_build_value_default_builder_format_string(self):
+        cfg = ConfigWithFallback({"int_field": 3})
+        self.assertEqual(fallback.present(cfg), False)
+
+        cfg = ConfigWithFallback({"text_field": "bar", "int_field": 37})
+        self.assertEqual(fallback.present(cfg), True)
+        self.assertEqual(fallback.build_value(cfg), "bar::37")
+
+    def test_format_string_field_fallback_optional_fields(self):
         class ConfigWithFallback(Config):
-            foo = ConfigText("foo", required=True)
-            bar = ConfigText("bar")
+            text_field = ConfigText("text_field", default="foo")
+            int_field = ConfigInt("int_field")
 
-        fallback = FieldFallback(
-            ["foo", "bar"], builder_kwargs={"format_string": "{bar}-{foo}"})
-        config = ConfigWithFallback({"foo": "oof", "bar": "rab"})
-        self.assertEqual(fallback.build_value(config), "rab-oof")
+        fallback = FormatStringFieldFallback(
+            "{text_field}::{int_field:02d}", ["int_field"], ["text_field"])
 
-    def test_build_value_custom_builder(self):
+        cfg = ConfigWithFallback({"int_field": 3})
+        self.assertEqual(fallback.present(cfg), True)
+        self.assertEqual(fallback.build_value(cfg), "foo::03")
+
+        cfg = ConfigWithFallback({"text_field": "bar", "int_field": 37})
+        self.assertEqual(fallback.present(cfg), True)
+        self.assertEqual(fallback.build_value(cfg), "bar::37")
+
+
+class TestConfigFieldWithFallback(TestCase):
+    def test_field_uses_fallback(self):
         class ConfigWithFallback(Config):
-            host = ConfigText("host", required=True)
-            port = ConfigInt("port", required=True)
-
-        def fallback_host_port(fields):
-            return "%(host)s:%(port)s" % fields
-
-        fallback = FieldFallback(['host', 'port'], fallback_host_port)
-        config = ConfigWithFallback({'host': 'example.com', 'port': 8080})
-        self.assertEqual(fallback.build_value(config), "example.com:8080")
-
-    def test_field_uses_required_fallback(self):
-        class ConfigWithFallback(Config):
-            oldfield = ConfigText(
-                "oldfield", required=False, required_fallback=True)
+            oldfield = ConfigText("oldfield", required=False)
             newfield = ConfigText(
                 "newfield", required=True,
-                fallbacks=[FieldFallback(["oldfield"])])
+                fallbacks=[SingleFieldFallback("oldfield")])
 
         config = ConfigWithFallback({"oldfield": "foo"})
         self.assertEqual(config.newfield, "foo")
 
     def test_field_ignores_unnecessary_fallback(self):
         class ConfigWithFallback(Config):
-            oldfield = ConfigText(
-                "oldfield", required=False, required_fallback=True)
+            oldfield = ConfigText("oldfield", required=False)
             newfield = ConfigText(
                 "newfield", required=True,
-                fallbacks=[FieldFallback(["oldfield"])])
+                fallbacks=[SingleFieldFallback("oldfield")])
 
         config = ConfigWithFallback({"oldfield": "foo", "newfield": "bar"})
         self.assertEqual(config.newfield, "bar")
 
     def test_field_present_if_fallback_present(self):
         class ConfigWithFallback(Config):
-            oldfield = ConfigText(
-                "oldfield", required=False, required_fallback=True)
+            oldfield = ConfigText("oldfield", required=False)
             newfield = ConfigText(
                 "newfield", required=True,
-                fallbacks=[FieldFallback(["oldfield"])])
+                fallbacks=[SingleFieldFallback("oldfield")])
 
         config = ConfigWithFallback({"oldfield": "foo"})
         self.assertEqual(ConfigWithFallback.newfield.present(config), True)
 
     def test_field_not_present_if_fallback_missing(self):
         class ConfigWithFallback(Config):
-            oldfield = ConfigText(
-                "oldfield", required=False, required_fallback=True)
+            oldfield = ConfigText("oldfield", required=False)
             newfield = ConfigText(
                 "newfield", required=False,
-                fallbacks=[FieldFallback(["oldfield"])])
+                fallbacks=[SingleFieldFallback("oldfield")])
 
         config = ConfigWithFallback({})
         self.assertEqual(ConfigWithFallback.newfield.present(config), False)
-
-    def test_field_present_if_optional_fallback_missing(self):
-        class ConfigWithFallback(Config):
-            oldfield = ConfigText(
-                "oldfield", required=False, required_fallback=False)
-            newfield = ConfigText(
-                "newfield", required=False,
-                fallbacks=[FieldFallback(["oldfield"])])
-
-        config = ConfigWithFallback({})
-        self.assertEqual(ConfigWithFallback.newfield.present(config), True)
