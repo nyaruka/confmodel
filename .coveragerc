@@ -5,5 +5,4 @@ omit = confmodel/_version.py
 [report]
 exclude_lines =
     # pragma: no cover
-    raise AssertionError
     class \w+\(Interface\):
