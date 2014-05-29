@@ -101,6 +101,40 @@ class TestConfig(TestCase):
             "    A foo field.",
             ]))
 
+    def test_doc_indentation(self):
+        expected_doc = '\n'.join([
+            "Test config.",
+            "    Indented.",
+            "",
+            "Outdented.",
+            "",
+            "Configuration options:",
+            "",
+            ":param foo:",
+            "",
+            "    A foo field.",
+            ])
+
+        class FooConfig(Config):
+            """
+            Test config.
+                Indented.
+
+            Outdented.
+            """
+            foo = ConfigField("A foo field.")
+
+        self.assertEqual(FooConfig.__doc__, expected_doc)
+
+        class BarConfig(Config):
+            """Test config.
+                Indented.
+
+            Outdented."""
+            foo = ConfigField("A foo field.")
+
+        self.assertEqual(BarConfig.__doc__, expected_doc)
+
     def test_inheritance(self):
         class FooConfig(Config):
             "Test config."

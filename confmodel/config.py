@@ -240,14 +240,38 @@ class ConfigRegex(ConfigText):
         return re.compile(value)
 
 
+def split_and_trim_docstring(docstring):
+    lines = docstring.expandtabs().splitlines()
+    if not lines:
+        return []
+    line_indents = set()
+    # Examine the indentation of each line, skipping the first line because
+    # it's special.
+    for line in lines[1:]:
+        stripped_line = line.lstrip()
+        if stripped_line:
+            # Skip empty lines.
+            line_indents.add(len(line) - len(stripped_line))
+    # Trim the indentation off each line. The first line is still special.
+    trimmed_lines = [lines[0].strip()]
+    if line_indents:
+        indent_trim = min(line_indents)
+        for line in lines[1:]:
+            trimmed_lines.append(line[indent_trim:].rstrip())
+    # Remove initial and final empty lines.
+    while trimmed_lines and not trimmed_lines[0]:
+        trimmed_lines.pop(0)
+    while trimmed_lines and not trimmed_lines[-1]:
+        trimmed_lines.pop()
+    return trimmed_lines
+
+
 def generate_doc(cls, fields, header_indent='', indent=' ' * 4):
     """
     Generate a docstring for a cls and its fields.
     """
-    cls_doc = cls.__doc__ or ''
-    doc = cls_doc.split("\n")
-    if doc and doc[-1].strip():
-        doc.append("")
+    doc = split_and_trim_docstring(cls.__doc__ or '')
+    doc.append("")
     doc.append("Configuration options:")
     for field in fields:
         header, field_doc = field.get_doc()
