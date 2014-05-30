@@ -32,7 +32,8 @@ class ConfigField(object):
 
     :param fallbacks:
         A list of :class:`FieldFallback` objects to try if the value isn't
-        present in the source data.
+        present in the source data. See :ref:`field-fallback-docs` for further
+        information.
 
     Subclasses of :class:`ConfigField` are expected to override :meth:`clean`
     to convert values from the source data to the required form. :meth:`clean`
@@ -51,7 +52,7 @@ class ConfigField(object):
     .. attribute:: name
 
         An instance attribute containing the name bound to this descriptor
-        instance. It is set by metaclass magic when a :class:`Config` subclass
+        instance. It is set by metaclass magic when a :class:`.Config` subclass
         is defined.
     """
     _creation_order = 0
@@ -96,7 +97,7 @@ class ConfigField(object):
         Check if a value for this field is present in the config data.
 
         :param config:
-            :class:`Config` object containing config data.
+            :class:`.Config` object containing config data.
         :param bool check_fallbacks:
             If ``False``, fallbacks will not be checked. (This is used
             internally to determine whether to use fallbacks when looking up
@@ -118,12 +119,12 @@ class ConfigField(object):
         """
         Check that the value is present if required and valid if present.
 
-        If the field is required but no value is found, a :class:`ConfigError`
+        If the field is required but no value is found, a :exc:`.ConfigError`
         is raised. Further validation is performed by calling :meth:`clean` and
         the value is assumed to be valid if no exceptions are raised.
 
         :param config:
-            :class:`Config` object containing config data.
+            :class:`.Config` object containing config data.
 
         :returns:
             ``None``, but exceptions are raised for validation failures.
@@ -136,7 +137,7 @@ class ConfigField(object):
 
     def raise_config_error(self, message_suffix):
         """
-        Raise a :class:`ConfigError` referencing this field.
+        Raise a :exc:`.ConfigError` referencing this field.
 
         The text "Field '<field name>' <message suffix>" is used as the
         exception message.
@@ -145,7 +146,7 @@ class ConfigField(object):
             A string to append to the exception message.
 
         :returns:
-            Doesn't return, but raises a :class:`ConfigError`.
+            Doesn't return, but raises a :exc:`.ConfigError`.
         """
         raise ConfigError("Field '%s' %s" % (self.name, message_suffix))
 
@@ -170,7 +171,7 @@ class ConfigField(object):
         Find a value in the source data, fallbacks, or field default.
 
         :param config:
-            :class:`Config` object containing config data.
+            :class:`.Config` object containing config data.
 
         :returns:
             The first value it finds.
@@ -193,7 +194,7 @@ class ConfigField(object):
         handled differently.
 
         :param config:
-            :class:`Config` object containing config data.
+            :class:`.Config` object containing config data.
 
         :returns:
             A cleaned value suitable for Python code to use.
@@ -226,7 +227,7 @@ class FieldFallback(object):
         """
         Check if a value for the named field is present in the config data.
 
-        :param config: :class:`Config` instance containing config data.
+        :param config: :class:`.Config` instance containing config data.
         :param str field_name: Name of the field to look up.
 
         :returns:
@@ -445,7 +446,7 @@ class Config(object):
 
     def raise_config_error(self, message):
         """
-        Raise a :class:`ConfigError` with the given message.
+        Raise a :exc:`.ConfigError` with the given message.
         """
         raise ConfigError(message)
 
@@ -453,7 +454,7 @@ class Config(object):
         """
         Subclasses may override this to provide cross-field validation.
 
-        Implementations should raise :class:`ConfigError` if the configuration
+        Implementations should raise :exc:`.ConfigError` if the configuration
         is invalid (by calling :meth:`raise_config_error`, for example).
         """
         pass

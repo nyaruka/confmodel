@@ -41,6 +41,7 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   overview
+   usage
+   advanced
    api
 
