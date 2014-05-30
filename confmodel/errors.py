@@ -2,5 +2,5 @@
 
 class ConfigError(Exception):
     """
-    Base exception class for config-related error.
+    Base exception class for config-related errors.
     """

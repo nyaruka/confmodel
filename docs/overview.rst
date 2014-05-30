@@ -79,3 +79,11 @@ This is useful, but we need a way to tell people what configuration is required.
       :param int magic_number:
 
           A magic number.
+
+
+.. _static-field-docs:
+
+Static fields
+=============
+
+TODO: Write something about static fields.

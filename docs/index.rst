@@ -7,6 +7,9 @@
 confmodel: A declarative configuration access and validation system.
 ====================================================================
 
+.. centered:: Release |release|
+
+
 confmodel is a tool for accessing, validating, and documenting configuration
 parameters. Config specifications are written as Python classes with
 specialised field attributes (similar to Django forms) and then instantiated

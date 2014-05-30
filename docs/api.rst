@@ -4,14 +4,21 @@ API Documentation
 
 
 .. automodule:: confmodel.config
-   :members:
    :show-inheritance:
+   :members:
+      Config
 
 
 Fields
 ======
 
 TODO: Document fields. Maybe these need to be in their own module?
+
+
+.. automodule:: confmodel.config
+   :show-inheritance:
+   :members:
+      ConfigField
 
 
 Exceptions
