@@ -100,6 +100,15 @@ immediately if something is wrong.
    ConfigError: Field 'magic_number' could not be converted to int.
 
 
+Further information
+===================
+
+Sometimes it's necessary for a config field to refer to other fields to find or
+construct its value, particularly as systems evolve over time. See
+:ref:`field-fallback-docs` for ways to do this.
+
+
+
 .. rubric:: Footnotes
 
 .. [#config-source]
