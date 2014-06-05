@@ -12,21 +12,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-
-##########################
-##########################
-
-import os
-print "\nvvvvvvvvvvvvvvvvvvvvvvvvvv\n"
-os.system("git status")
-print "\n==========================\n"
-os.system("git diff")
-print "\n^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
-
-##########################
-##########################
-
-
 import sys
 import os
 
