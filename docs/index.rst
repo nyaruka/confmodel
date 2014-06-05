@@ -10,11 +10,10 @@ confmodel: A declarative configuration access and validation system.
 .. centered:: Release |release|
 
 
-.. warning::
+.. note::
 
-   This documentation is not yet complete. It is available for the purpose of
-   review and feedback. When it's ready for actual use, this warning will be
-   removed.
+   This documentation is not yet complete. It will be updated and improved as
+   we work on confmodel.
 
    Thank you for your attention.
 
