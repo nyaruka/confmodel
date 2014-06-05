@@ -13,7 +13,8 @@ attributes.
 
 .. testcode:: usage1
 
-   from confmodel.config import Config, ConfigInt, ConfigText
+   from confmodel import Config
+   from confmodel.fields import ConfigInt, ConfigText
 
    class MyConfig(Config):
        """
@@ -112,5 +113,5 @@ construct its value, particularly as systems evolve over time. See
 .. rubric:: Footnotes
 
 .. [#config-source]
-   More generally, any :ref:`IConfigData<IConfigData>` provider can be used. A
-   ``dict`` is just the simplest and most convenient for many cases.
+   More generally, any :ref:`IConfigData<IConfigData_ref>` provider can be
+   used. A ``dict`` is just the simplest and most convenient for many cases.
