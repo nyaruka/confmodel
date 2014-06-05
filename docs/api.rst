@@ -18,38 +18,6 @@ API documentation
       Version number.
 
 
-.. automodule:: confmodel.fields
-   :show-inheritance:
-   :members:
-
-   :mod:`confmodel.fields` module
-   ==============================
-
-   All standard config field classes live here.
-
-   TODO: Write docstrings for remaining more fields.
-   TODO: Document base class separately?
-
-   Members
-   -------
-
-
-.. automodule:: confmodel.fallbacks
-   :show-inheritance:
-   :members:
-
-   :mod:`confmodel.fallbacks` module
-   =================================
-
-   All standard field fallback classes live here.
-
-   TODO: Write docstrings for remaining more fallbacks.
-   TODO: Document base class separately?
-
-   Members
-   -------
-
-
 .. automodule:: confmodel.errors
    :show-inheritance:
    :members:

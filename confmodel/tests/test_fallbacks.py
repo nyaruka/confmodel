@@ -1,62 +1,11 @@
 from unittest import TestCase
 
 from confmodel.config import Config
-from confmodel.fallbacks import (
-    FieldFallback, SingleFieldFallback, FormatStringFieldFallback)
+from confmodel.fallbacks import SingleFieldFallback, FormatStringFieldFallback
 from confmodel.fields import ConfigText, ConfigInt
-from confmodel.errors import ConfigError
 
 
-class TestFieldFallback(TestCase):
-    def test_get_field_descriptor(self):
-        class ConfigWithFallback(Config):
-            field = ConfigText("field")
-
-        cfg = ConfigWithFallback({"field": "foo"})
-        fallback = FieldFallback()
-        self.assertEqual(
-            fallback.get_field_descriptor(cfg, "field"),
-            ConfigWithFallback.field)
-        self.assertRaises(
-            ConfigError, fallback.get_field_descriptor, cfg, "no_field")
-
-    def test_field_present(self):
-        class ConfigWithFallback(Config):
-            field = ConfigText("field")
-            field_empty = ConfigText("field_empty")
-            field_default = ConfigText("field_default", default="bar")
-
-        cfg = ConfigWithFallback({"field": "foo"})
-        fallback = FieldFallback()
-        self.assertEqual(fallback.field_present(cfg, "field"), True)
-        self.assertEqual(fallback.field_present(cfg, "field_empty"), False)
-        self.assertEqual(fallback.field_present(cfg, "field_default"), False)
-
-    def test_present_not_implemented(self):
-        fallback = FieldFallback()
-        self.assertRaises(NotImplementedError, fallback.present, None)
-
-    def test_present(self):
-        class ConfigWithFallback(Config):
-            field = ConfigText("field")
-            field_empty = ConfigText("field_empty")
-            field_default = ConfigText("field_default", default="bar")
-            field_default_required = ConfigText("field_default", default="baz")
-
-        fallback = FieldFallback()
-        fallback.required_fields = ("field", "field_default_required")
-
-        self.assertEqual(fallback.present(ConfigWithFallback({})), False)
-
-        cfg = ConfigWithFallback({
-            "field": "foo",
-            "field_default_required": "bar",
-        })
-        self.assertEqual(fallback.present(cfg), True)
-
-    def test_build_value_not_implemented(self):
-        fallback = FieldFallback()
-        self.assertRaises(NotImplementedError, fallback.build_value, None)
+class TestFieldFallbacks(TestCase):
 
     # Tests for SingleFieldFallback
 

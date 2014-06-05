@@ -11,7 +11,7 @@ class FakeModel(object):
         self._config_data = config
 
 
-class TestConfigField(TestCase):
+class TestConfigFields(TestCase):
     def fake_model(self, *value, **kw):
         config = kw.pop('config', {})
         if value:

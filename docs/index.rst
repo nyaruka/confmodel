@@ -39,8 +39,10 @@ Documentation
 
 .. toctree::
    :maxdepth: 2
+   :includehidden:
 
    usage
    advanced
    api
-
+   api_fields
+   api_fallbacks

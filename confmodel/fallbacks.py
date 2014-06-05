@@ -1,42 +1,4 @@
-from confmodel.errors import ConfigError
-
-
-class FieldFallback(object):
-    required_fields = None
-
-    def get_field_descriptor(self, config, field_name):
-        field = config._fields.get(field_name, None)
-        if field is None:
-            raise ConfigError(
-                "Undefined fallback field: '%s'" % (field_name,))
-        return field
-
-    def field_present(self, config, field_name):
-        """
-        Check if a value for the named field is present in the config data.
-
-        :param config: :class:`.Config` instance containing config data.
-        :param str field_name: Name of the field to look up.
-
-        :returns:
-            ``True`` if the value is present in the provided data, ``False``
-            otherwise.
-        """
-        field = self.get_field_descriptor(config, field_name)
-        return field.present(config)
-
-    def present(self, config):
-        if self.required_fields is None:
-            raise NotImplementedError(
-                "Please set .required_fields or override .present()")
-
-        for field_name in self.required_fields:
-            if not self.field_present(config, field_name):
-                return False
-        return True
-
-    def build_value(self, config):
-        raise NotImplementedError("Please implement .build_value()")
+from confmodel.config import FieldFallback
 
 
 class SingleFieldFallback(FieldFallback):
