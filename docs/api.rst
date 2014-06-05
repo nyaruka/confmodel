@@ -2,47 +2,47 @@
 API documentation
 =================
 
-.. module:: confmodel.config
-
-
-These are some classes that live in :mod:`confmodel.config`.
-
-TODO: Clean this up a bit.
-
-.. autoclass:: confmodel.config.Config
-   :show-inheritance:
+.. automodule:: confmodel
    :members:
 
+   :mod:`confmodel` module
+   =======================
 
-Fields
-======
+   The top-level namespace contains some convenience imports.
 
-TODO: Document more fields. Maybe these need to be in their own module?
+   Members
+   -------
 
-.. autoclass:: confmodel.config.ConfigField
-   :show-inheritance:
-   :members:
+   .. data:: __version__
 
+      Version number.
 
-Exceptions
-==========
-
-These are some classes that live in :mod:`confmodel.errors`.
 
 .. automodule:: confmodel.errors
    :show-inheritance:
    :members:
 
+   :mod:`confmodel.errors` module
+   ==============================
 
-Interfaces
-==========
+   Exception classes used in confmodel.
 
-These are some interfaces that live in :mod:`confmodel.interfaces`.
+   Members
+   -------
 
 
 .. We can't cross-reference interfaces. :-(
-.. _IConfigData:
+.. _IConfigData_ref:
 
 .. automodule:: confmodel.interfaces
    :members:
    :special-members:
+
+
+   :mod:`confmodel.interfaces` module
+   ==================================
+
+   Interfaces used in confmodel.
+
+   Members
+   -------

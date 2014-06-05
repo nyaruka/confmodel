@@ -15,7 +15,9 @@ in a flexible way using :class:`.FieldFallback` objects.
 
 .. testcode:: fallbacks1
 
-   from confmodel.config import Config, ConfigText, SingleFieldFallback
+   from confmodel import Config
+   from confmodel.fields import ConfigText
+   from confmodel.fallbacks import SingleFieldFallback
 
    class SimpleFallbackConfig(Config):
        """
@@ -65,7 +67,9 @@ preference.
 
 .. doctest:: fallbacks2
 
-   >>> from confmodel.config import Config, ConfigText, SingleFieldFallback
+   >>> from confmodel import Config
+   >>> from confmodel.fields import ConfigText
+   >>> from confmodel.fallbacks import SingleFieldFallback
    >>> class MultiFallbackConfig(Config):
    ...     """
    ...     This config specification demonstrates the use of multiple fallbacks.
@@ -106,7 +110,9 @@ default value is used as a last resort if no fallback values are found.
 
 .. doctest:: fallbacks3
 
-   >>> from confmodel.config import Config, ConfigText, SingleFieldFallback
+   >>> from confmodel import Config
+   >>> from confmodel.fields import ConfigText
+   >>> from confmodel.fallbacks import SingleFieldFallback
    >>> class FallbackDefaultsConfig(Config):
    ...     """
    ...     This config specification demonstrates fallbacks with defaults.
@@ -133,8 +139,9 @@ For more complex fallbacks, :class:`FormatStringFieldFallback` can be used.
 
 .. doctest:: fallbacks4
 
-   >>> from confmodel.config import (
-   ...     Config, ConfigInt, ConfigText, FormatStringFieldFallback)
+   >>> from confmodel import Config
+   >>> from confmodel.fields import ConfigInt, ConfigText
+   >>> from confmodel.fallbacks import FormatStringFieldFallback
    >>> class FormatFallbackConfig(Config):
    ...     """
    ...     This config specification demonstrates format string fallbacks.
