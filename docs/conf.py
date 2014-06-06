@@ -17,12 +17,16 @@ import os
 
 import sphinx_rtd_theme
 
-import confmodel._version
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
+
+
+# This has to happen after we modify sys.path otherwise we get the installed
+# package on readthedocs which has a bad version in it because versioneer and
+# "setup.py install" don't like each other much.
+import confmodel._version
 
 # -- General configuration ------------------------------------------------
 
@@ -62,6 +66,10 @@ copyright = u'2014, Praekelt Foundation'
 #
 # The short X.Y version.
 version = confmodel._version.get_versions()['version']
+if os.environ.get('READTHEDOCS', None) == 'True':
+    # readthedocs adds stuff to this file, which makes versioneer think we're
+    # dirty. We're not, so strip the "-dirty" off the version.
+    version = version.replace('-dirty', '')
 # The full version, including alpha/beta/rc tags.
 release = version
 
