@@ -109,6 +109,7 @@ construct its value, particularly as systems evolve over time. See
 :ref:`field-fallback-docs` for ways to do this.
 
 
+----
 
 .. rubric:: Footnotes
 

@@ -180,6 +180,8 @@ Static fields
 TODO: Write something about static fields.
 
 
+----
+
 .. rubric:: Footnotes
 
 .. [#fallback-default]
