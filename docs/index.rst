@@ -13,7 +13,11 @@ confmodel: A declarative configuration access and validation system.
 .. note::
 
    This documentation is not yet complete. It will be updated and improved as
-   we work on confmodel.
+   we work on confmodel. Up to date documentation can be found at:
+
+     * http://confmodel.readthedocs.org/en/latest/ for the latest release
+     * http://confmodel.readthedocs.org/en/develop/ for the latest development
+       version
 
    Thank you for your attention.
 
