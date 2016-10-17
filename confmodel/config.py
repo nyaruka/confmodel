@@ -1,4 +1,5 @@
 import inspect
+import six
 import textwrap
 
 from confmodel.errors import ConfigError
@@ -313,12 +314,11 @@ class ConfigMetaClass(type):
         return cls
 
 
+@six.add_metaclass(ConfigMetaClass)
 class Config(object):
     """
     Config object.
     """
-
-    __metaclass__ = ConfigMetaClass
 
     def __init__(self, config_data, static=False):
         self._config_data = IConfigData(config_data)

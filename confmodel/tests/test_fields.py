@@ -145,7 +145,7 @@ class TestConfigFields(TestCase):
         assert_url(self.field_value(field, 'foo'), path='foo')
         assert_url(self.field_value(field, u'foo'), path='foo')
         assert_url(self.field_value(field, u'foo\u1234'),
-                   path='foo\xe1\x88\xb4')
+                   path=u'foo\u1234')
         self.assertEqual(None, self.field_value(field, None))
         self.assertEqual(None, self.field_value(field))
         self.assert_field_invalid(field, object())

@@ -1,6 +1,7 @@
 from copy import deepcopy
-from urllib2 import urlparse
+from six.moves.urllib.parse import urlparse
 import re
+import six
 
 from confmodel.config import ConfigField
 
@@ -12,7 +13,7 @@ class ConfigText(ConfigField):
         # XXX: We should really differentiate between "unicode" and "bytes".
         #      However, yaml.load() gives us bytestrings or unicode depending
         #      on the content.
-        if not isinstance(value, basestring):
+        if not isinstance(value, six.string_types):
             self.raise_config_error("is not unicode.")
         return value
 
@@ -43,7 +44,7 @@ class ConfigBool(ConfigField):
     field_type = 'bool'
 
     def clean(self, value):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             return value.strip().lower() not in ('false', '0', '')
         return bool(value)
 
@@ -72,13 +73,9 @@ class ConfigUrl(ConfigField):
     field_type = 'URL'
 
     def clean(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, six.string_types):
             self.raise_config_error("is not a URL string.")
-        # URLs must be bytes, not unicode.
-        if isinstance(value, unicode):
-            value = value.encode('utf-8')
-        return urlparse.urlparse(value)
-
+        return urlparse(value)
 
 class ConfigRegex(ConfigText):
     field_type = 'regex'
